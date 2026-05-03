@@ -1,3 +1,4 @@
+
 .env
 .venv/
 venv/
@@ -9,19 +10,11 @@ __pycache__/
 .pip-tmp/
 .streamlit/secrets.toml
 data/*
-!data/.gitkeep
-!data/documents/
-!data/documents/.gitkeep
-!data/gmail_json/
-!data/gmail_json/.gitkeep
 !data/secrets/
 !data/secrets/.gitkeep
-data/documents/*
-!data/documents/.gitkeep
-data/gmail_json/*
-!data/gmail_json/.gitkeep
 data/secrets/*
 !data/secrets/.gitkeep
 documents/
 storage/
 *.log
+!docs/*
