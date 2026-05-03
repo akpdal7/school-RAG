@@ -1,0 +1,15 @@
+README.md
+pyproject.toml
+src/rag_app/__init__.py
+src/rag_app/api.py
+src/rag_app/config.py
+src/rag_app/gmail_ingestion.py
+src/rag_app/ingestion.py
+src/rag_app/models.py
+src/rag_app/qdrant_store.py
+src/rag_app/query.py
+src/rag_app/usage.py
+src/rag_app_demo.egg-info/PKG-INFO
+src/rag_app_demo.egg-info/SOURCES.txt
+src/rag_app_demo.egg-info/dependency_links.txt
+src/rag_app_demo.egg-info/top_level.txt
