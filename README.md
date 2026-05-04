@@ -11,6 +11,9 @@ This project solves that problem by ingesting school files and Gmail messages in
 ## Public URL
 http://school-rag-alb-801552592.us-east-1.elb.amazonaws.com/
 
+## GH Repo
+https://github.com/akpdal7/school-RAG
+
 ## Architecture Diagram
 ![RAG architecture](arch.png)
 
