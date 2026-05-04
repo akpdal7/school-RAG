@@ -1,0 +1,88 @@
+{
+  "family": "school-rag",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "2048",
+  "executionRoleArn": "TASK_EXECUTION_ROLE_ARN",
+  "containerDefinitions": [
+    {
+      "name": "school-rag",
+      "image": "ECR_IMAGE_URI",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8501,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "MESH_API_BASE_URL",
+          "value": "https://api.meshapi.ai/v1"
+        },
+        {
+          "name": "QDRANT_COLLECTION",
+          "value": "school_rag_demo"
+        },
+        {
+          "name": "EMBEDDING_PROVIDER",
+          "value": "local_hash"
+        },
+        {
+          "name": "OPENAI_LLM_MODEL",
+          "value": "gpt-4.1-nano"
+        },
+        {
+          "name": "GMAIL_CREDENTIALS_FILE",
+          "value": "data/secrets/gmail_credentials.json"
+        },
+        {
+          "name": "GMAIL_TOKEN_FILE",
+          "value": "data/secrets/gmail_token.json"
+        },
+        {
+          "name": "GMAIL_JSON_OUTPUT_FOLDER",
+          "value": "data/gmail_json"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "MESH_API_KEY",
+          "valueFrom": "MESH_API_KEY_SECRET_ARN"
+        },
+        {
+          "name": "QDRANT_URL",
+          "valueFrom": "QDRANT_URL_SECRET_ARN"
+        },
+        {
+          "name": "QDRANT_API_KEY",
+          "valueFrom": "QDRANT_API_KEY_SECRET_ARN"
+        },
+        {
+          "name": "GMAIL_CREDENTIALS_JSON",
+          "valueFrom": "GMAIL_CREDENTIALS_JSON_SECRET_ARN"
+        },
+        {
+          "name": "GMAIL_TOKEN_JSON",
+          "valueFrom": "GMAIL_TOKEN_JSON_SECRET_ARN"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/school-rag",
+          "awslogs-region": "AWS_REGION",
+          "awslogs-stream-prefix": "app"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:8501/_stcore/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 90
+      }
+    }
+  ]
+}

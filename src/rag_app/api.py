@@ -1,8 +1,13 @@
-from fastapi import FastAPI, HTTPException
+import shutil
+import tempfile
+from pathlib import Path
+from uuid import uuid4
+
+from fastapi import FastAPI, File, HTTPException, UploadFile
 
 from rag_app.config import get_settings
 from rag_app.gmail_ingestion import export_and_ingest_gmail_sender, save_zapier_email_and_ingest
-from rag_app.ingestion import ingest_folder
+from rag_app.ingestion import SUPPORTED_EXTENSIONS, ingest_folder
 from rag_app.models import (
     ChatRequest,
     ChatResponse,
@@ -50,6 +55,41 @@ def ingest(request: IngestRequest) -> dict:
         return ingest_folder(request.folder_path, get_settings())
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/upload/ingest", response_model=IngestResponse)
+async def upload_and_ingest(files: list[UploadFile] = File(...)) -> dict:
+    if not files:
+        raise HTTPException(status_code=400, detail="Upload at least one file.")
+
+    unsupported = [
+        file.filename
+        for file in files
+        if Path(file.filename or "").suffix.lower() not in SUPPORTED_EXTENSIONS
+    ]
+    if unsupported:
+        allowed = ", ".join(SUPPORTED_EXTENSIONS)
+        joined = ", ".join(unsupported)
+        raise HTTPException(status_code=400, detail=f"Unsupported file type(s): {joined}. Allowed: {allowed}")
+
+    upload_dir = Path(tempfile.gettempdir()) / "school-rag-uploads" / uuid4().hex
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    try:
+        for file in files:
+            safe_name = Path(file.filename or f"upload-{uuid4().hex}").name
+            destination = upload_dir / safe_name
+            with destination.open("wb") as output:
+                while chunk := await file.read(1024 * 1024):
+                    output.write(chunk)
+
+        return ingest_folder(str(upload_dir), get_settings())
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    finally:
+        for file in files:
+            await file.close()
+        shutil.rmtree(upload_dir, ignore_errors=True)
 
 
 @app.post("/gmail/ingest", response_model=GmailIngestResponse)

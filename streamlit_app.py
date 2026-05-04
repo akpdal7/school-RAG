@@ -23,13 +23,21 @@ st.title("RAG Demo")
 
 with st.sidebar:
     st.header("Ingest")
-    st.caption("Use `data/documents` for local school files and `data/gmail_json` for exported teacher emails.")
-    folder_path = st.text_input(
-        "Windows folder path",
-        value="data/documents",
-        placeholder=r"C:\Users\YourName\Documents\rag_docs",
+    st.caption("Upload school files from your computer.")
+    uploaded_files = st.file_uploader(
+        "Files",
+        type=["pdf", "md", "markdown", "txt", "json"],
+        accept_multiple_files=True,
     )
-    ingest_clicked = st.button("Ingest folder", type="primary", use_container_width=True)
+    upload_clicked = st.button("Upload and ingest", type="primary", use_container_width=True)
+
+    with st.expander("Server folder ingest"):
+        folder_path = st.text_input(
+            "Folder path on the server",
+            value="data/documents",
+            placeholder=r"data/documents",
+        )
+        ingest_clicked = st.button("Ingest server folder", use_container_width=True)
 
     st.divider()
     st.subheader("Gmail sender")
@@ -48,6 +56,41 @@ with st.sidebar:
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
+
+if upload_clicked:
+    if not uploaded_files:
+        st.sidebar.error("Choose at least one supported file first.")
+    else:
+        with st.sidebar.status("Uploading and ingesting files...", expanded=True) as status:
+            try:
+                files = [
+                    (
+                        "files",
+                        (
+                            uploaded_file.name,
+                            uploaded_file.getvalue(),
+                            uploaded_file.type or "application/octet-stream",
+                        ),
+                    )
+                    for uploaded_file in uploaded_files
+                ]
+                response = requests.post(
+                    f"{API_BASE_URL}/upload/ingest",
+                    files=files,
+                    timeout=900,
+                )
+                response.raise_for_status()
+                payload = response.json()
+                st.write(f"Uploaded files: {len(uploaded_files)}")
+                st.write(f"Loaded documents: {payload['documents_loaded']}")
+                st.write(f"Collection: {payload['collection']}")
+                render_usage(payload["usage"])
+                status.update(label=payload["message"], state="complete")
+            except requests.RequestException as exc:
+                status.update(label="Upload ingestion failed", state="error")
+                detail = exc.response.text if getattr(exc, "response", None) is not None else str(exc)
+                st.sidebar.error(detail)
 
 
 if ingest_clicked:

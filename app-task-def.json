@@ -1,0 +1,88 @@
+{
+  "family": "school-rag",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "2048",
+  "executionRoleArn": "arn:aws:iam::212818618356:role/school-rag-ecs-task-execution-role",
+  "containerDefinitions": [
+    {
+      "name": "school-rag",
+      "image": "212818618356.dkr.ecr.us-east-1.amazonaws.com/school-rag:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8501,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "MESH_API_BASE_URL",
+          "value": "https://api.meshapi.ai/v1"
+        },
+        {
+          "name": "QDRANT_COLLECTION",
+          "value": "school_rag_demo"
+        },
+        {
+          "name": "EMBEDDING_PROVIDER",
+          "value": "local_hash"
+        },
+        {
+          "name": "OPENAI_LLM_MODEL",
+          "value": "gpt-4.1-nano"
+        },
+        {
+          "name": "GMAIL_CREDENTIALS_FILE",
+          "value": "data/secrets/gmail_credentials.json"
+        },
+        {
+          "name": "GMAIL_TOKEN_FILE",
+          "value": "data/secrets/gmail_token.json"
+        },
+        {
+          "name": "GMAIL_JSON_OUTPUT_FOLDER",
+          "value": "data/gmail_json"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "MESH_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:212818618356:secret:school-rag/mesh-api-key-rO3SNs"
+        },
+        {
+          "name": "QDRANT_URL",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:212818618356:secret:school-rag/qdrant-url-Px05Ou"
+        },
+        {
+          "name": "QDRANT_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:212818618356:secret:school-rag/qdrant-api-key-50ghXy"
+        },
+        {
+          "name": "GMAIL_CREDENTIALS_JSON",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:212818618356:secret:school-rag/gmail-credentials-json-dP8WMc"
+        },
+        {
+          "name": "GMAIL_TOKEN_JSON",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:212818618356:secret:school-rag/gmail-token-json-fNCrPF"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/school-rag",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "app"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:8501/_stcore/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 90
+      }
+    }
+  ]
+}

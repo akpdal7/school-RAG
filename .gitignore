@@ -17,4 +17,6 @@ data/secrets/*
 documents/
 storage/
 *.log
-!docs/*
+docs/*
+lightning.md
+README-old.md
